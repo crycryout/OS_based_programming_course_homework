@@ -11,7 +11,6 @@
 #include <time.h>
 #define DEBUG 1
 #define HIDDENUNSHOW 1
-#define PRINTTYPE 1
 bool lsWithL(const char *path) {
   struct dirent *entry;
   DIR *dp = opendir(path);
@@ -19,8 +18,7 @@ bool lsWithL(const char *path) {
     perror("opendir faied!");
     return false;
   }
-  while ((entry = readdir(dp)) != NULL) { // TODO: finish tran homework2 to
-    // homework3
+  while ((entry = readdir(dp)) != NULL) {
     struct stat state_buf;
     char full_path_name[1024];
 #ifdef HIDDENUNSHOW // 如果设置隐藏文件不显示,则不打印以'.'开头的隐藏文件
@@ -32,6 +30,12 @@ bool lsWithL(const char *path) {
       perror("stat wrong in line 23");
       continue;
     }
+    if (S_ISREG(state_buf.st_mode)) {
+      printf("_ ");
+    }
+    if (S_ISDIR(state_buf.st_mode)) {
+      printf("d ");
+    }
     printf("%c%c%c %c%c%c %c%c%c ", (state_buf.st_mode & S_IRUSR) ? 'r' : '_',
            (state_buf.st_mode & S_IWUSR) ? 'w' : '_',
            (state_buf.st_mode & S_IXUSR) ? 'x' : '_',
@@ -42,14 +46,6 @@ bool lsWithL(const char *path) {
            (state_buf.st_mode & S_IWOTH) ? 'w' : '_',
            (state_buf.st_mode & S_IXOTH) ? 'x' : '_');
     printf("%lu ", state_buf.st_nlink);
-#ifdef PRINTTYPE
-    if (S_ISREG(state_buf.st_mode)) {
-      printf("REGFILE ");
-    }
-    if (S_ISDIR(state_buf.st_mode)) {
-      printf("DIR ");
-    }
-#endif /* ifdef PRINTTYPE */
     uid_t uid = state_buf.st_uid;
     struct passwd *pw = getpwuid(uid);
     printf("%s ", pw->pw_name);
@@ -57,8 +53,8 @@ bool lsWithL(const char *path) {
     struct group *gp = getgrgid(gid);
     printf("%s ", gp->gr_name);
     printf("%ld ", state_buf.st_size);
-    time_t access_time = state_buf.st_atime;
-    struct tm *local_time = localtime(&access_time);
+    time_t modification_time = state_buf.st_mtime;
+    struct tm *local_time = localtime(&modification_time);
     char time_buf[1024];
     sprintf(time_buf, "%s", asctime(local_time));
     if (strlen(time_buf) > 0 && time_buf[strlen(time_buf) - 1] == '\n') {

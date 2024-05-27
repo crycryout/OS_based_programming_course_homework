@@ -17,10 +17,12 @@ bool listFiles(const char *path) {
     char full_path_buff[1024];
     struct stat state_buf;
 #ifdef HIDDENUNSHOW // 如果设置隐藏文件不显示,则不打印以'.'开头的隐藏文件
-    if (entry->d_name == '.')
+    if (entry->d_name[0] == '.')
       continue;
-#endif                           /* ifdef HIDDENUNSHOW */
-    if (entry->d_name[0] == '.') // 过滤掉., .. 以及隐藏文件
+#endif /* ifdef HIDDENUNSHOW */
+    if (entry->d_name[0] == '.' && strlen(entry->d_name) == 1 ||
+        entry->d_name[0] == '.' && entry->d_name[1] == '.' &&
+            strlen(entry->d_name) == 2) // 过滤掉., ..
       continue;
     sprintf(full_path_buff, "%s/%s", path, entry->d_name);
     if (stat(full_path_buff, &state_buf) == -1) {
